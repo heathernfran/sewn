@@ -5,6 +5,7 @@ import './App.css'
 
 function App() {
   const [users, setUsers] = useState<User[]>([])
+  const [currentUser, setCurrentUser] = useState<User | null>()
 
   const getUsers = async () => {
     try {
@@ -15,11 +16,40 @@ function App() {
     }
   }
 
+  const handleCurrentUser = async (id: string) => {
+    try {
+      const response = await axios.get(`/users/${id}`)
+      setCurrentUser(response.data)
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  const handleBack = () => {
+    setCurrentUser(null)
+  }
+
   useEffect(() => {
     getUsers()
   }, [])
 
-  return (
+  const renderCurrentUser = () =>
+    currentUser && (
+      <>
+        <button onClick={handleBack}>Back to all users</button>
+        <h1>
+          {currentUser.firstName} {currentUser.lastName}
+        </h1>
+        <h2>Company</h2>
+        <p>{currentUser.company}</p>
+        <h2>Email</h2>
+        <p>{currentUser.email}</p>
+        <h2>Phone number</h2>
+        <p>{currentUser.phoneNumber}</p>
+      </>
+    )
+
+  const renderTable = () => (
     <>
       <table>
         <thead>
@@ -32,7 +62,7 @@ function App() {
         </thead>
         <tbody>
           {users.map((user) => (
-            <tr key={user.id}>
+            <tr key={user.id} onClick={() => handleCurrentUser(user.id)}>
               <td>
                 {user.firstName} {user.lastName}
               </td>
@@ -45,6 +75,8 @@ function App() {
       </table>
     </>
   )
+
+  return currentUser ? renderCurrentUser() : renderTable()
 }
 
 export default App
