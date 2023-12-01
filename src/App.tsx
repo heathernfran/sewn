@@ -4,15 +4,18 @@ import type { User } from './types'
 import './App.css'
 
 function App() {
-  const [users, setUsers] = useState<User[]>([])
+  const [users, setUsers] = useState<{ [pageNumber: number]: User[] }>({})
   const [currentUser, setCurrentUser] = useState<User | null>()
+  const [pageNumber, setPageNumber] = useState(0)
 
-  const getUsers = async () => {
-    try {
-      const response = await axios.get('/users')
-      setUsers(response.data)
-    } catch (err) {
-      console.log(err)
+  const getUsers = async (pageNumber: number) => {
+    if (users[pageNumber] === undefined) {
+      try {
+        const response = await axios.get(`/users?page=${pageNumber}`)
+        setUsers({ ...users, [pageNumber]: response.data })
+      } catch (err) {
+        console.log(err)
+      }
     }
   }
 
@@ -29,9 +32,17 @@ function App() {
     setCurrentUser(null)
   }
 
+  const handlePreviousPage = () => {
+    setPageNumber((prevState) => prevState - 1)
+  }
+
+  const handleNextPage = () => {
+    setPageNumber((prevState) => prevState + 1)
+  }
+
   useEffect(() => {
-    getUsers()
-  }, [])
+    getUsers(pageNumber)
+  }, [pageNumber])
 
   const renderCurrentUser = () =>
     currentUser && (
@@ -61,18 +72,24 @@ function App() {
           </tr>
         </thead>
         <tbody>
-          {users.map((user) => (
-            <tr key={user.id} onClick={() => handleCurrentUser(user.id)}>
-              <td>
-                {user.firstName} {user.lastName}
-              </td>
-              <td>{user.company}</td>
-              <td>{user.email}</td>
-              <td>{user.phoneNumber}</td>
-            </tr>
-          ))}
+          {users[pageNumber] &&
+            users[pageNumber].map((user) => (
+              <tr key={user.id} onClick={() => handleCurrentUser(user.id)}>
+                <td>
+                  {user.firstName} {user.lastName}
+                </td>
+                <td>{user.company}</td>
+                <td>{user.email}</td>
+                <td>{user.phoneNumber}</td>
+              </tr>
+            ))}
         </tbody>
       </table>
+      <button disabled={pageNumber === 0} onClick={handlePreviousPage}>
+        Previous
+      </button>
+      <span>{pageNumber + 1}</span>
+      <button onClick={handleNextPage}>Next</button>
     </>
   )
 

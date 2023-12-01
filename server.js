@@ -9,8 +9,13 @@ app.get('/message', (_req, res) => {
   res.send('Hello from Express!')
 })
 
-app.get('/users', (_req, res) => {
-  res.json(data)
+app.get('/users', (req, res) => {
+  const perPage = 10
+  const page = parseInt(req.query.page, 10) || 0
+  const start = page * perPage
+  const end = start + perPage
+  const results = data.slice(start, end)
+  res.json(results)
 })
 
 app.get('/users/:id', (req, res) => {
